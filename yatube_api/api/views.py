@@ -1,6 +1,5 @@
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
-from django_filters.rest_framework import DjangoFilterBackend
 from posts.models import Comment, Follow, Group, Post
 from rest_framework import filters, permissions, status, viewsets
 from rest_framework.pagination import LimitOffsetPagination
@@ -63,7 +62,7 @@ class FollowViewSet(APIView):
         return queryset
 
     permission_classes = (permissions.IsAuthenticated,)
-    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
+    filter_backends = (filters.SearchFilter)
     search_fields = ('following__username',)
 
 
