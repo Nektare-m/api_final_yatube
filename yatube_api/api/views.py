@@ -5,6 +5,7 @@ from rest_framework import filters, permissions, status, viewsets
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django_filters.rest_framework import DjangoFilterBackend
 
 from .serializers import (CommentSerializer, FollowSerializer, GroupSerializer,
                           PostSerializer)
@@ -62,7 +63,7 @@ class FollowViewSet(APIView):
         return queryset
 
     permission_classes = (permissions.IsAuthenticated,)
-    filter_backends = (filters.SearchFilter)
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     search_fields = ('following__username',)
 
 
