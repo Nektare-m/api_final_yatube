@@ -89,16 +89,3 @@ Response
 "post": 0
 }
 ```
-
-GET "Информация о сообществе"
-```
-{
-"id": 0,
-"title": "string",
-"slug": "^-$",
-"description": "string"
-}
-```
-
-
-
