@@ -15,11 +15,12 @@ class GroupViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
 
+
 class FollowViewSet(APIView):
     permission_classes = (permissions.IsAuthenticated,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('following__username',)
-    
+
     def get(self, request):
         queryset = self.get_queryset()
         if 'search' in request.GET:
@@ -75,14 +76,14 @@ class PostsViewSet(viewsets.ModelViewSet):
         if instance.author != self.request.user:
             raise PermissionDenied('Изменение чужого контента запрещено!')
         super(PostsViewSet, self).perform_destroy(instance)
-    
+
     def get_permissions(self):
 
         if self.action == 'post':
 
             return (OwnerOrReadOnly(),)
-        
-        return super().get_permissions() 
+
+        return super().get_permissions()
 
 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -120,4 +121,4 @@ class CommentViewSet(viewsets.ModelViewSet):
 
             return (OwnerOrReadOnly(),)
 
-        return super().get_permissions() 
+        return super().get_permissions()
