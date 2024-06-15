@@ -50,3 +50,55 @@ python manage.py migrate
 python manage.py runserver
 ```
 
+### Примеры запросов:
+
+POST "Создание публикации"
+```
+api/v1/posts/
+```
+Payload
+```
+{
+"text": "string",            
+"image": "string",
+"group": 0
+}
+```
+Response
+```
+{
+"id": 0,
+"author": "string",
+"text": "string",
+"pub_date": "2019-08-24T14:15:22Z",
+"image": "string",
+"group": 0
+}
+```
+GET "Получение комментариев"
+```
+api/v1/posts/{post_id}/comments/
+```
+Response
+```
+{
+"id": 0,
+"author": "string",
+"text": "string",
+"created": "2019-08-24T14:15:22Z",
+"post": 0
+}
+```
+
+GET "Информация о сообществе"
+```
+{
+"id": 0,
+"title": "string",
+"slug": "^-$",
+"description": "string"
+}
+```
+
+
+
