@@ -1,13 +1,15 @@
 from django.contrib.auth import get_user_model
-from posts.models import Comment, Follow, Group, Post
 from rest_framework import serializers
+
+from posts.models import Comment, Follow, Group, Post
+
 
 User = get_user_model()
 
 
 class PostSerializer(serializers.ModelSerializer):
-    author = serializers.CharField(
-        source='author.username',
+    author = serializers.SlugRelatedField(
+        slug_field='username',
         read_only=True
     )
 
@@ -28,7 +30,10 @@ class CommentSerializer(serializers.ModelSerializer):
 
 
 class FollowSerializer(serializers.ModelSerializer):
-    user = serializers.CharField(read_only=True)
+    user = serializers.SlugRelatedField(
+        slug_field='username',
+        read_only=True
+    )
     following = serializers.SlugRelatedField(
         slug_field='username', queryset=User.objects.all()
     )

@@ -5,26 +5,21 @@ from rest_framework import filters, permissions, status, viewsets
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from django_filters.rest_framework import DjangoFilterBackend
 
+from .permissions import OwnerOrReadOnly
 from .serializers import (CommentSerializer, FollowSerializer, GroupSerializer,
                           PostSerializer)
 
 
-class GroupViewSet(viewsets.ViewSet):
-    def list(self, request):
-        queryset = Group.objects.all()
-        serializer = GroupSerializer(queryset, many=True)
-        return Response(serializer.data)
-
-    def retrieve(self, request, pk=None):
-        queryset = Group.objects.all()
-        cat = get_object_or_404(queryset, pk=pk)
-        serializer = GroupSerializer(cat)
-        return Response(serializer.data)
-
+class GroupViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Group.objects.all()
+    serializer_class = GroupSerializer
 
 class FollowViewSet(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('following__username',)
+    
     def get(self, request):
         queryset = self.get_queryset()
         if 'search' in request.GET:
@@ -62,10 +57,6 @@ class FollowViewSet(APIView):
         queryset = Follow.objects.filter(user=user)
         return queryset
 
-    permission_classes = (permissions.IsAuthenticated,)
-    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
-    search_fields = ('following__username',)
-
 
 class PostsViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
@@ -84,6 +75,14 @@ class PostsViewSet(viewsets.ModelViewSet):
         if instance.author != self.request.user:
             raise PermissionDenied('Изменение чужого контента запрещено!')
         super(PostsViewSet, self).perform_destroy(instance)
+    
+    def get_permissions(self):
+
+        if self.action == 'post':
+
+            return (OwnerOrReadOnly(),)
+        
+        return super().get_permissions() 
 
 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -92,7 +91,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(
             author=self.request.user,
-            post=Post.objects.get(pk=self.kwargs.get('post_id'))
+            post=get_object_or_404(Post, pk=self.kwargs.get('post_id'))
         )
 
     def perform_update(self, serializer):
@@ -107,10 +106,18 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
 
-        post = Post.objects.get(pk=self.kwargs.get("post_id"))
+        post = get_object_or_404(Post, pk=self.kwargs.get('post_id'))
 
         if "pk" in self.kwargs:
 
             return Comment.objects.filter(pk=self.kwargs.get("pk"))
 
         return post.comments.all()
+
+    def get_permissions(self):
+
+        if self.action == 'post':
+
+            return (OwnerOrReadOnly(),)
+
+        return super().get_permissions() 
