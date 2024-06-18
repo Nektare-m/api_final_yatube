@@ -43,7 +43,15 @@ class FollowSerializer(serializers.ModelSerializer):
         model = Follow
 
     def validate(self, data):
-        if self.context == data['following']:
+        already_followed = Follow.objects.filter(
+            user=self.context['request'].user,
+            following=data['following']
+        ).exists()
+        if already_followed:
+            raise serializers.ValidationError(
+                "Вы уже подписаны на этого пользователя"
+            )
+        if self.context['request'].user == data['following']:
             raise serializers.ValidationError("Подписка на себя - запрещена")
         return data
 

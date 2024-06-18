@@ -1,4 +1,4 @@
-from django.urls import include, path
+from django.urls import include, path, re_path
 from rest_framework.routers import DefaultRouter
 
 from .views import CommentViewSet, FollowViewSet, GroupViewSet, PostsViewSet
@@ -10,11 +10,13 @@ router.register(r'posts', PostsViewSet)
 
 
 urlpatterns = [
-    path('', include('djoser.urls.jwt')),
-    path('', include(router.urls)),
-    path('follow/', FollowViewSet.as_view()),
+    path('v1/', include('djoser.urls.jwt')),
+    re_path('v1/', include(router.urls)),
+    re_path('v1/follow/', FollowViewSet.as_view(
+        {'get': 'list', 'post': 'create'}
+    )),
     path(
-        'posts/<int:post_id>/comments/<int:pk>/',
+        'v1/posts/<int:post_id>/comments/<int:pk>/',
         CommentViewSet.as_view(
             {'get': 'retrieve', 'put': 'update',
              'delete': 'destroy', 'patch': 'partial_update'
@@ -22,7 +24,7 @@ urlpatterns = [
         )
     ),
     path(
-        'posts/<int:post_id>/comments/',
+        'v1/posts/<int:post_id>/comments/',
         CommentViewSet.as_view(
             {'get': 'list', 'post': 'create'}
         )

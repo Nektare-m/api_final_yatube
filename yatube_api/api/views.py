@@ -1,9 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
-from rest_framework import filters, permissions, status, viewsets
+from rest_framework import filters, permissions, viewsets
 from rest_framework.pagination import LimitOffsetPagination
-from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from .permissions import OwnerOrReadOnly
 from .serializers import (CommentSerializer, FollowSerializer, GroupSerializer,
@@ -18,63 +16,18 @@ class GroupViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = GroupSerializer
 
 
-class FollowViewSet(APIView):
+class FollowViewSet(viewsets.ModelViewSet):
+    serializer_class = FollowSerializer
     permission_classes = (permissions.IsAuthenticated,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('following__username',)
 
-    def get(self, request):
-        queryset = self.get_queryset()
-        if 'search' in request.GET:
-            search_term = request.GET['search']
-            queryset = queryset.filter(
-                following__username__contains=search_term
-            )
-        serializer = FollowSerializer(queryset, many=True)
-        return Response(data=serializer.data)
-
-    def post(self, request):
-        serializer = FollowSerializer(data=request.data)
-        if serializer.is_valid():
-            if self.request.user == serializer.validated_data['following']:
-                return Response(status=status.HTTP_400_BAD_REQUEST)
-            already_followed = Follow.objects.filter(
-                user=self.request.user,
-                following=serializer.validated_data['following']
-            ).exists()
-            if already_followed:
-                return Response(
-                    data={'message': 'Вы уже подписаны на этого автора'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            serializer.save(user=self.request.user)
-            return Response(
-                data=serializer.data,
-                status=status.HTTP_201_CREATED
-            )
-        else:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
-    # serializer_class = FollowSerializer
-
-    # def perform_create(self, serializer):
-    #     Following = User.objects.get(username=self.request.data['following'])
-
-    #     if self.request.user == Following:
-    #         return Response(status=status.HTTP_400_BAD_REQUEST)
-    #     already_followed = Follow.objects.filter(
-    #         user=self.request.user,
-    #         following=Following
-    #     ).exists()
-    #     if already_followed:
-    #         return Response(
-    #             data={'message': 'Вы уже подписаны на этого автора'},
-    #             status=status.HTTP_400_BAD_REQUEST
-    #         )
-    #     serializer.save(
-    #         user=self.request.user,
-    #         following=Following
-    #     )
+    def perform_create(self, serializer):
+        Following = User.objects.get(username=self.request.data['following'])
+        serializer.save(
+            user=self.request.user,
+            following=Following
+        )
 
     def get_queryset(self):
         user = self.request.user
